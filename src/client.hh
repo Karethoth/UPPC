@@ -30,13 +30,15 @@ class Client
 {
  private:
   struct event_base *base;
+  std::string salt;
+  std::string pool;
 
  public:
   eState state;
   struct evbuffer *input, *output;
 
   bool Connect( std::string, int );
-  //bool JoinPool( std::string );
+  void SetPool( std::string );
   void Run();
 
   bool HandleMessage( std::string& );

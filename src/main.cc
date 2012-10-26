@@ -10,8 +10,13 @@ int main( int c, char *v[] )
   setvbuf( stdout, NULL, _IONBF, 0 );
 
   Client client;
-  client.Connect( "localhost", 40000 );
-  //client.JoinPool( "d4d8f95cc9b655390fdc9f3bc2d695fae36cd1d7" );
+  if( !client.Connect( "127.0.0.1", 40000 ) )
+  {
+    std::cout << "Connect() failed, stopping..\n";
+    return -1;
+  }
+
+  client.SetPool( "0dcd10df6f295b8c3ef65e42fb4921962de4962a" );
   client.Run();
 
   return 0;
