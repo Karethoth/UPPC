@@ -21,7 +21,6 @@ using std::string;
 bool Client::Connect( string host, int port )
 {
   std::cout << "Connecting to " << host << ":" << port << ".\n";
-  evutil_socket_t connection;
   struct sockaddr_in sin;
   struct bufferevent *bev;
   struct hostent *h;
@@ -112,13 +111,13 @@ bool Client::HandleMessage( string &msg )
     data = data.substr( 0, data.length()-1 );
 
 
-  if( cmd.compare( string( "RSALT" ) ) == 0 )
+  if( cmd.compare( "RSALT" ) == 0 )
   {
     salt = data;
     std::cout << "Got salt: '" << salt << "'.\n";
 
     string salted = pool;
-    pool.append( salt );
+    salted.append( salt );
 
     unsigned char hash[20];
     char hex[41];
@@ -127,8 +126,25 @@ bool Client::HandleMessage( string &msg )
     sha1::toHexString( hash, hex );
     string regCmd = "REG:";
     regCmd.append( hex );
-    regCmd.append( "\n" );
+    regCmd.append( "\r\n" );
     evbuffer_add( output, regCmd.c_str(), regCmd.length() );
+  }
+  else if( cmd.compare( "REGRESP" ) == 0 )
+  {
+    std::cout << "Received regresp.\n";
+    if( data.compare( "POOLED" ) == 0 )
+    {
+      std::cout << "REG succeeded, we're in the pool now!\n";
+      state = IN_POOL;
+    }
+    else
+    {
+      std::cout << "REG failed, all aboard the fail boat!\n";
+      state = ERROR;
+      event_base_loopbreak( base );
+      close( connection );
+      return false;
+    }
   }
 
   return true;

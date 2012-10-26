@@ -29,6 +29,7 @@ enum eState
 class Client
 {
  private:
+  evutil_socket_t connection;
   struct event_base *base;
   std::string salt;
   std::string pool;

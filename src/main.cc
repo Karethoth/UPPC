@@ -16,7 +16,7 @@ int main( int c, char *v[] )
     return -1;
   }
 
-  client.SetPool( "0dcd10df6f295b8c3ef65e42fb4921962de4962a" );
+  client.SetPool( "62e97cfdff8a7b4642130fef6870a3b5212d32e5" );
   client.Run();
 
   return 0;
