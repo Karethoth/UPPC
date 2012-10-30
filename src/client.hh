@@ -13,7 +13,7 @@ struct sPackage
   unsigned int   ip;
   unsigned short port;
   unsigned short dataLen;
-  unsigned char *data;
+  char *data;
 };
 
 
@@ -43,6 +43,7 @@ class Client
   void Run();
 
   bool HandleMessage( std::string& );
+  bool HandlePackage();
 };
 
 #endif

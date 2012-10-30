@@ -1,6 +1,7 @@
 #include "client.hh"
 #include "callbacks.hh"
 #include "sha1.hh"
+#include "subClient.hh"
 
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -13,6 +14,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <errno.h>
+#include <sstream>
 
 using std::vector;
 using std::string;
@@ -96,8 +98,6 @@ void Client::Run()
 
 bool Client::HandleMessage( string &msg )
 {
-  std::cout << "Handling message: '" << msg << "'\n";
-
   string cmd, data;
   size_t cmdEnd = msg.find( ":" );
 
@@ -146,7 +146,69 @@ bool Client::HandleMessage( string &msg )
       return false;
     }
   }
+  else if( cmd.compare( "PKG" ) == 0 )
+  {
+    HandlePackage();
+  }
 
   return true;
+}
+
+
+
+bool Client::HandlePackage()
+{
+  char buffer[65561];
+  int n;
+
+  n = evbuffer_remove( input, buffer, 65560 );
+
+  std::cout << "READ " << n << " bytes!\n";
+  std::cout << "READ " << buffer << " bytes!\n";
+
+  struct sPackage pkg;
+
+  char *p = buffer;
+
+  printf( "p = %p\n", p );
+  pkg.requestID = *(unsigned int*)p;
+  p += 4;
+  printf( "p = %p\n", p );
+  pkg.ip = *(unsigned int*)p;
+  p += 4;
+  printf( "p = %p\n", p );
+  pkg.port = *(unsigned short*)p;
+  p += 2;
+  printf( "p = %p\n", p );
+  pkg.dataLen = *(unsigned short*)p;
+  p += 2;
+  printf( "p = %p\n", p );
+  pkg.data = p;
+
+
+  printf( "REQID:   %p\n", pkg.requestID );
+  printf( "IP:      %p\n", pkg.ip );
+  printf( "PORT:    %p\n", pkg.port );
+  printf( "DATALEN: %p\n", pkg.dataLen );
+  printf( "DATA:" );
+
+  for( int i=0; i < pkg.dataLen; ++i )
+  {
+    printf( "\t%p\n", pkg.data[i] );
+  }
+
+  SubClient sc( pkg.ip, pkg.port );
+  if( sc.Connect() )
+  {
+    sc.Write( pkg.data, pkg.dataLen );
+    string resp = sc.Read();
+    sc.Close();
+
+    std::cout << "Got response: '" << resp << "'\n";
+
+    return true;
+  }
+
+  return false;
 }
 
